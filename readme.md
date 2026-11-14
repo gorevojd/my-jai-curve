@@ -7,7 +7,7 @@ constant, linear and cubic interpolation, and tangent sampling.
 
 Direct module dependencies:
 
-- [my-jai-math](https://github.com/gorevojd/my-jai-math): vector types and math operations.
+- [my-jai-math](https://github.com/gorevojd/my-jai-math): vector types, math operations and `hermite3` interpolation weights.
 
 Jai standard library: `Basic`, `Sort`.
 
@@ -53,7 +53,7 @@ interpolation mode for the segment leading to the next key:
 - `Linear`: interpolate the two values; stored tangents are ignored.
 - `Cubic`: Hermite interpolation using the left key's right tangent and the right
   key's left tangent. Tangents are derivatives with respect to time and are scaled
-  by the segment duration during interpolation.
+  by the segment duration in the weights returned by `my-jai-math.hermite3`.
 
 `sample` computes only the value. It shares the interpolation implementation with
 `sample_keyframe`, but derivative calculations are excluded at compile time for

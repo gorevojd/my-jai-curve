@@ -218,21 +218,23 @@ sample_internal :: inline (curve: CurveBase($T), time: float, $with_tangents: bo
     }
 
     duration := right.time - left.time;
-    t := (time - left.time) / duration;
+    elapsed := time - left.time;
     if left.interpolation_mode == .Linear {
+        t := elapsed / duration;
         result.value = Math.lerp(left.value, right.value, t);
         #if with_tangents {
             result.l_tangent = (right.value - left.value) / duration;
         }
     }
     else if left.interpolation_mode == .Cubic {
-        t2 := t * t;
-        t3 := t2 * t;
-        result.value = left.value * (2.0 * t3 - 3.0 * t2 + 1.0) +
-                       right.value * (-2.0 * t3 + 3.0 * t2) +
-                       left.r_tangent * ((t3 - 2.0 * t2 + t) * duration) +
-                       right.l_tangent * ((t3 - t2) * duration);
+        base := Math.hermite3(elapsed, duration);
+        result.value = left.value * base[0] +
+                       right.value * base[1] +
+                       left.r_tangent * base[2] +
+                       right.l_tangent * base[3];
         #if with_tangents {
+            t := elapsed / duration;
+            t2 := t * t;
             result.l_tangent = (left.value - right.value) * ((6.0 * t2 - 6.0 * t) / duration) +
                                left.r_tangent * (3.0 * t2 - 4.0 * t + 1.0) +
                                right.l_tangent * (3.0 * t2 - 2.0 * t);
