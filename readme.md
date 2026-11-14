@@ -55,6 +55,10 @@ interpolation mode for the segment leading to the next key:
   key's left tangent. Tangents are derivatives with respect to time and are scaled
   by the segment duration during interpolation.
 
+`sample` computes only the value. It shares the interpolation implementation with
+`sample_keyframe`, but derivative calculations are excluded at compile time for
+`sample`; there is no runtime flag check for whether to compute them.
+
 `sample_keyframe(curve, time)` returns a key at the requested time. Between keys,
 its value matches `sample`, both tangents equal the curve's derivative, its tangent
 mode is `User`, and its interpolation mode comes from the left key. At an existing

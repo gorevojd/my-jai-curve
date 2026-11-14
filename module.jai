@@ -144,9 +144,10 @@ update_keyframe :: (curve: *CurveBase($T), key_index: u32, key: Keyframe(T)) -> 
  * @param[in] time Finite sample time.
  * @return Interpolated value, or zero for an empty curve or rejected sample.
  * @details The left key selects Constant, Linear or Cubic (Hermite) interpolation for each segment.
+ * @note Evaluates only the value; derivative calculations are excluded at compile time.
  */
 sample :: (curve: CurveBase($T), time: float) -> T {
-    key := sample_keyframe(curve, time);
+    key := sample_internal(curve, time, false);
     return key.value;
 }
 
@@ -164,6 +165,21 @@ sample :: (curve: CurveBase($T), time: float) -> T {
  *   Invalid time returns time zero; an unsupported mode preserves the requested time.
  */
 sample_keyframe :: (curve: CurveBase($T), time: float) -> Keyframe(T) {
+    return sample_internal(curve, time, true);
+}
+
+/** @brief Removes all keys while retaining allocated storage and its allocator. */
+clear :: (curve: *CurveBase($T)) {
+    array_reset_keeping_memory(*curve.keys);
+}
+
+/** @brief Frees key storage, preserving its allocator. Leaves an empty, reusable curve; safe to repeat. */
+destroy :: (curve: *CurveBase($T)) {
+    array_reset(*curve.keys);
+}
+
+#scope_module
+sample_internal :: inline (curve: CurveBase($T), time: float, $with_tangents: bool) -> Keyframe(T) {
     using Math;
 
     result: Keyframe(T);
@@ -205,7 +221,9 @@ sample_keyframe :: (curve: CurveBase($T), time: float) -> Keyframe(T) {
     t := (time - left.time) / duration;
     if left.interpolation_mode == .Linear {
         result.value = Math.lerp(left.value, right.value, t);
-        result.l_tangent = (right.value - left.value) / duration;
+        #if with_tangents {
+            result.l_tangent = (right.value - left.value) / duration;
+        }
     }
     else if left.interpolation_mode == .Cubic {
         t2 := t * t;
@@ -214,9 +232,11 @@ sample_keyframe :: (curve: CurveBase($T), time: float) -> Keyframe(T) {
                        right.value * (-2.0 * t3 + 3.0 * t2) +
                        left.r_tangent * ((t3 - 2.0 * t2 + t) * duration) +
                        right.l_tangent * ((t3 - t2) * duration);
-        result.l_tangent = (left.value - right.value) * ((6.0 * t2 - 6.0 * t) / duration) +
-                           left.r_tangent * (3.0 * t2 - 4.0 * t + 1.0) +
-                           right.l_tangent * (3.0 * t2 - 2.0 * t);
+        #if with_tangents {
+            result.l_tangent = (left.value - right.value) * ((6.0 * t2 - 6.0 * t) / duration) +
+                               left.r_tangent * (3.0 * t2 - 4.0 * t + 1.0) +
+                               right.l_tangent * (3.0 * t2 - 2.0 * t);
+        }
     }
     else {
         assert(false, "Unsupported curve interpolation mode.");
@@ -224,21 +244,12 @@ sample_keyframe :: (curve: CurveBase($T), time: float) -> Keyframe(T) {
         return result;
     }
 
-    result.r_tangent = result.l_tangent;
+    #if with_tangents {
+        result.r_tangent = result.l_tangent;
+    }
     return result;
 }
 
-/** @brief Removes all keys while retaining allocated storage and its allocator. */
-clear :: (curve: *CurveBase($T)) {
-    array_reset_keeping_memory(*curve.keys);
-}
-
-/** @brief Frees key storage, preserving its allocator. Leaves an empty, reusable curve; safe to repeat. */
-destroy :: (curve: *CurveBase($T)) {
-    array_reset(*curve.keys);
-}
-
-#scope_module
 key_lower_bound :: (curve: CurveBase($T), time: float) -> int {
     first := 0;
     last := curve.keys.count;
