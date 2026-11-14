@@ -227,18 +227,22 @@ sample_internal :: inline (curve: CurveBase($T), time: float, $with_tangents: bo
         }
     }
     else if left.interpolation_mode == .Cubic {
-        base := Math.hermite3(elapsed, duration);
-        result.value = left.value * base[0] +
-                       right.value * base[1] +
-                       left.r_tangent * base[2] +
-                       right.l_tangent * base[3];
+        base: [4]float;
         #if with_tangents {
-            derivative_base := Math.hermite3_derivative(elapsed, duration);
+            derivative_base: [4]float;
+            base, derivative_base = Math.hermite3_with_derivative(elapsed, duration);
             result.l_tangent = left.value * derivative_base[0] +
                                right.value * derivative_base[1] +
                                left.r_tangent * derivative_base[2] +
                                right.l_tangent * derivative_base[3];
         }
+        else {
+            base = Math.hermite3(elapsed, duration);
+        }
+        result.value = left.value * base[0] +
+                       right.value * base[1] +
+                       left.r_tangent * base[2] +
+                       right.l_tangent * base[3];
     }
     else {
         assert(false, "Unsupported curve interpolation mode.");
