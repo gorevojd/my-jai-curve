@@ -233,11 +233,11 @@ sample_internal :: inline (curve: CurveBase($T), time: float, $with_tangents: bo
                        left.r_tangent * base[2] +
                        right.l_tangent * base[3];
         #if with_tangents {
-            t := elapsed / duration;
-            t2 := t * t;
-            result.l_tangent = (left.value - right.value) * ((6.0 * t2 - 6.0 * t) / duration) +
-                               left.r_tangent * (3.0 * t2 - 4.0 * t + 1.0) +
-                               right.l_tangent * (3.0 * t2 - 2.0 * t);
+            derivative_base := Math.hermite3_derivative(elapsed, duration);
+            result.l_tangent = left.value * derivative_base[0] +
+                               right.value * derivative_base[1] +
+                               left.r_tangent * derivative_base[2] +
+                               right.l_tangent * derivative_base[3];
         }
     }
     else {
