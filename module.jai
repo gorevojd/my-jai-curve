@@ -106,5 +106,5 @@ normalize :: (curve: *CurveBase($T), sort: bool = false) {
 #scope_module
 #import "Basic";
 #import "Sort";
-Math :: #import "MyBasic/MyMath";
+Math :: #import "my-jai-math";
 
