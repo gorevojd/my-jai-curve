@@ -78,7 +78,7 @@ add_keyframe :: (curve: *CurveBase($T), keyframe: Keyframe(T)) -> u32 {
             assert(false, "Curve has reached the key limit; INVALID_KEY_INDEX is reserved for errors.");
             return INVALID_KEY_INDEX;
         }
-        
+
         array_insert_at(*curve.keys, keyframe, index);
     }
 
