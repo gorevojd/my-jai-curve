@@ -22,7 +22,7 @@ Keyframe :: struct (T: Type) {
 }
 
 CurveBase :: struct (T: Type) {
-    #assert (T == float || T == Math.Vec2 || T == Math.Vec3 || T == Math.Vec4) "CurveBase supports only float, Vec2, Vec3 and Vec4.";
+    #assert array_find(AllowedCurveValueTypes, T) "CurveBase value type must be in AllowedCurveValueTypes.";
 
     keys: [..] Keyframe(T);
 }
@@ -31,6 +31,8 @@ Float_Curve :: CurveBase(float);
 Vec2_Curve :: CurveBase(Math.Vec2);
 Vec3_Curve :: CurveBase(Math.Vec3);
 Vec4_Curve :: CurveBase(Math.Vec4);
+
+AllowedCurveValueTypes :: Type.[float, Math.Vec2, Math.Vec3, Math.Vec4];
 
 INVALID_KEY_INDEX :: Math.U32_MAX;
 
